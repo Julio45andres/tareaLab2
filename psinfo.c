@@ -10,7 +10,7 @@
 
 void usage(char *filename);
 int searchInFile(char *filename, char *s);
-void print_status(char *tgid);
+void print_status(char *pid);
 
 int main (int argc, char *argv[]){
 
@@ -41,15 +41,18 @@ void usage(char *app){
     printf("Usage: %s [PID]\n\n", app);
 }
 
-void print_status(char *tgid){
-    printf("%s\n", tgid);
+void print_status(char *pid){
+    printf("PID del proceso:%s\n", pid);
     int salto = 0;
 
     char path[40], line[100], *p;
     FILE *statusf;
 
-    snprintf(path, 40, "/proc/%s/status", tgid);
-    printf("/proc/%s/status\n", tgid);
+    // Crea la ruta para el proceso
+    snprintf(path, 40, "/proc/%s/status", pid);
+
+    printf("Ruta:\t\t/proc/%s/status\n", pid);
+    
     statusf = fopen(path, "r");
     if(!statusf)
         return;
@@ -58,11 +61,35 @@ void print_status(char *tgid){
         if(strncmp(line, "Name:", 5) == 0)
         {
             salto = 6;
+            printf("Nombre: \t");
         }
-        if(strncmp(line, "Groups:", 7) == 0){
+        if(strncmp(line, "State:", 6) == 0)
+        {
+            salto = 7;
+            printf("Estado: \t");
+        }
+        if(strncmp(line, "VmExe:", 6) == 0){
+            salto = 7;
+            printf("\tTEXT: \t");
+        }
+        if(strncmp(line, "VmData:", 7) == 0){
             salto = 8;
-            printf("groups:\n)");
+            printf("Tamaño de las regiones de memoria:\n");
+            printf("\tDATA: \t");
+        }
+        if(strncmp(line, "VmStk:", 6) == 0){
+            salto = 7;
+            printf("\tSTACK: \t");
         } 
+        if(strncmp(line, "voluntary_ctxt_switches:", 24) == 0){
+            salto = 25;
+            printf("Número de cambios de contexto realizados:\n");
+            printf("\tVoluntarios: \t");
+        }
+        if(strncmp(line, "nonvoluntary_ctxt_switches:", 27) == 0){
+            salto = 28;
+            printf("\tNo voluntarios: ");
+        }  
         if(salto == 0)
             continue;
         
