@@ -4,9 +4,10 @@
 * UdeA
 */
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h> 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h> 
+#include <ctype.h>
 
 void usage(char *filename);
 int searchInFile(char *filename, char *s);
@@ -15,7 +16,7 @@ void print_status(char *pid);
 int main (int argc, char *argv[]){
 
     // int result;
-    if(argc < 2 || argc > 2){
+    if(argc < 2){
         usage(argv[0]);
         exit(1);
     }
@@ -32,7 +33,17 @@ int main (int argc, char *argv[]){
         exit(1);
     } */
 
-    print_status(argv[1]);
+    printf("\n");
+    if(strncmp(argv[1], "-l", 2) == 0){
+        int i;
+        for(i = 2; i < argc; i++){
+            // printf("oie %s\n", argv[i]);
+            print_status(argv[i]);
+        }
+    }
+    else{
+        print_status(argv[1]);
+    }
 
     return 0;
 }
@@ -41,8 +52,9 @@ void usage(char *app){
     printf("Usage: %s [PID]\n\n", app);
 }
 
+// Función parser
 void print_status(char *pid){
-    printf("PID del proceso:%s\n", pid);
+    printf("********* PID del proceso: %s *********\n", pid);
     int salto = 0;
 
     char path[40], line[100], *p;
@@ -58,8 +70,10 @@ void print_status(char *pid){
         return;
     
     while(fgets(line, 100, statusf)){
+        // La función strncmp, compara 2 strings y devuelve 0 si son iguales.
         if(strncmp(line, "Name:", 5) == 0)
-        {
+        {   // Sirve para saltarse los caracteres Name: y obtener el valor de la linea
+            // Ejemplo 1: si la linea es "Name: gedit", se obtiene "gedit".
             salto = 6;
             printf("Nombre: \t");
         }
@@ -70,16 +84,16 @@ void print_status(char *pid){
         }
         if(strncmp(line, "VmExe:", 6) == 0){
             salto = 7;
-            printf("\tTEXT: \t");
+            printf("\tTEXT: \t\t");
         }
         if(strncmp(line, "VmData:", 7) == 0){
             salto = 8;
             printf("Tamaño de las regiones de memoria:\n");
-            printf("\tDATA: \t");
+            printf("\tDATA: \t\t");
         }
         if(strncmp(line, "VmStk:", 6) == 0){
             salto = 7;
-            printf("\tSTACK: \t");
+            printf("\tSTACK: \t\t");
         } 
         if(strncmp(line, "voluntary_ctxt_switches:", 24) == 0){
             salto = 25;
@@ -89,7 +103,8 @@ void print_status(char *pid){
         if(strncmp(line, "nonvoluntary_ctxt_switches:", 27) == 0){
             salto = 28;
             printf("\tNo voluntarios: ");
-        }  
+        }
+        // Si salto = 0 significa que 
         if(salto == 0)
             continue;
         
@@ -97,6 +112,10 @@ void print_status(char *pid){
         // Ignorar Name:
         p = line + salto;
         // Ignorar espacio en blanco
+        // Del ejemplo 1, se puede obtener p = "  gedit", la siguiente instrucción
+        // devuelve p = "gedit"
+        // *p caracter a la izquierda de p, ++p remueve un caracter a la izquierda de p.
+        // de p.
         while(isspace(*p)) ++p;
         printf("%s", p);
         salto = 0;
@@ -104,6 +123,7 @@ void print_status(char *pid){
     }
 
     fclose(statusf);
+    printf("\n");
 }
 
 int searchInFile2(char *filename, char *s){
